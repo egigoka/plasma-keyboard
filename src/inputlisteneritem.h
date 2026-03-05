@@ -16,6 +16,7 @@
 #include <xkbcommon/xkbcommon.h>
 
 #include "inputplugin.h"
+#include "kwinfakeinput.h"
 
 class OverlayController;
 
@@ -57,5 +58,6 @@ Q_SIGNALS:
 private:
     InputPlugin m_input;
     OverlayController *m_overlayController = nullptr;
+    KWinFakeInput m_fakeInput;
     bool m_keyboardNavigationActive = false;
 };
