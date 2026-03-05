@@ -25,6 +25,8 @@ KeyPanel {
             return BreezeConstants.normalKeyPressedBackgroundColor;
         } else if (control && control.highlighted) {
             return BreezeConstants.highlightedKeyBackgroundColor;
+        } else if (control && control.checked) {
+            return BreezeConstants.checkedKeyBackgroundColor;
         }
         return BreezeConstants.normalKeyBackgroundColor;
     }

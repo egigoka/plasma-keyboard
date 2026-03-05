@@ -19,7 +19,10 @@
 #include <QtWaylandClient/private/qwaylandwindow_p.h>
 #include <qpa/qwindowsysteminterface.h>
 
+#include "inputlisteneritem.h"
+#include "inputpanelwindow.h"
 #include "plasmakeyboardsettings.h"
+#include "plasmakeyboardstate.h"
 #include "qwaylandinputpanelshellintegration_p.h"
 
 #include <config-plasma-keyboard.h>
@@ -120,6 +123,13 @@ int main(int argc, char **argv)
             PlasmaKeyboardSettings::self()->load();
         });
     // clang-format on
+
+    qmlRegisterType<InputPanelWindow>("org.kde.plasma.keyboard", 1, 0, "InputPanelWindow");
+    qmlRegisterType<InputListenerItem>("org.kde.plasma.keyboard", 1, 0, "InputListenerItem");
+    qmlRegisterSingletonInstance<PlasmaKeyboardSettings>("org.kde.plasma.keyboard", 1, 0,
+        "PlasmaKeyboardSettings", PlasmaKeyboardSettings::self());
+    qmlRegisterSingletonInstance<PlasmaKeyboardState>("org.kde.plasma.keyboard", 1, 0,
+        "PlasmaKeyboardState", PlasmaKeyboardState::self());
 
     QQmlApplicationEngine view;
     KLocalization::setupLocalizedContext(&view);

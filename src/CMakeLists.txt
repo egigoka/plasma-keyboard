@@ -12,6 +12,8 @@ ecm_add_qtwayland_client_protocol(plasma-keyboard PROTOCOL ${WaylandProtocols_DA
 ecm_add_qtwayland_client_protocol(plasma-keyboard PROTOCOL ${WaylandProtocols_DATADIR}/unstable/text-input/text-input-unstable-v1.xml BASENAME text-input-unstable-v1)
 ecm_add_qtwayland_client_protocol(plasma-keyboard PROTOCOL "${Wayland_DATADIR}/wayland.xml" BASENAME wayland)
 
+qt6_generate_wayland_protocol_client_sources(plasma-keyboard FILES ${PLASMA_WAYLAND_PROTOCOLS_DIR}/fake-input.xml)
+
 target_sources(plasma-keyboard PRIVATE
     main.cpp
     inputlisteneritem.cpp
@@ -22,6 +24,10 @@ target_sources(plasma-keyboard PRIVATE
     inputpanelwindow.h
     inputplugin.cpp
     inputplugin.h
+    kwinfakeinput.cpp
+    kwinfakeinput.h
+    plasmakeyboardstate.cpp
+    plasmakeyboardstate.h
     qwaylandinputpanelshellintegration.cpp
     qwaylandinputpanelshellintegration_p.h
     qwaylandinputpanelsurface.cpp
