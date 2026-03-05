@@ -10,6 +10,7 @@
 #include "layoutpathhelper.h"
 #include "logging.h"
 #include "plasmakeyboardsettings.h"
+#include "plasmakeyboardstate.h"
 #include <plasma_keyboard_version.h>
 
 #include <KAboutData>
@@ -79,6 +80,11 @@ int main(int argc, char **argv)
             PlasmaKeyboardSettings::self()->load();
         });
     // clang-format on
+
+    // InputListenerItem / InputPanelWindow are QML_ELEMENT (auto-registered by the
+    // QML module); only the fork's new PlasmaKeyboardState needs manual registration.
+    qmlRegisterSingletonInstance<PlasmaKeyboardState>("org.kde.plasma.keyboard", 1, 0,
+        "PlasmaKeyboardState", PlasmaKeyboardState::self());
 
     QQmlApplicationEngine view;
     KLocalization::setupLocalizedContext(&view);

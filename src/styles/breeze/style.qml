@@ -132,10 +132,27 @@ KeyboardStyle {
                 horizontalAlignment: Text.AlignHCenter
                 verticalAlignment: control.displayText.length > 1 ? Text.AlignVCenter : Text.AlignBottom
                 anchors.centerIn: parent
+                TextMetrics {
+                    id: keyTextMetrics
+                    text: keyText.text
+                    font.family: theme.fontFamily
+                    font.weight: Font.Light
+                    font.pixelSize: 60 * scaleHint
+                    font.capitalization: control.uppercased ? Font.AllUppercase : Font.MixedCase
+                }
                 font {
                     family: theme.fontFamily
                     weight: Font.Light
-                    pixelSize: 60 * scaleHint
+                    pixelSize: {
+                        const baseSize = 60 * scaleHint;
+                        const width = keyTextMetrics.width;
+                        const target = control.width * 0.9;
+                        if (!width || width <= 0 || !target || target <= 0) {
+                            return baseSize;
+                        }
+                        const ratio = Math.min(1.0, target / width);
+                        return baseSize * ratio;
+                    }
                     capitalization: control.uppercased ? Font.AllUppercase : Font.MixedCase
                 }
             }
