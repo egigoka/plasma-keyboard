@@ -47,7 +47,8 @@ BaseKey {
                     pixelSize: {
                         const baseSize = 40 * theme.scaleHint;
                         const width = keyTextMetrics.width;
-                        const target = control.width * 0.9;
+                        const contentWidth = control.width - (theme.keyBackgroundMargin * 2);
+                        const target = contentWidth * 0.9;
                         if (!width || width <= 0 || !target || target <= 0) {
                             return baseSize;
                         }
