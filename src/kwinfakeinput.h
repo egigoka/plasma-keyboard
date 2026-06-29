@@ -29,6 +29,9 @@ public:
     // Whether a modifier is currently pressed
     bool isModifierPressed() const;
 
+    // Whether only text-changing modifiers (Shift/Caps Lock) are pressed.
+    bool hasOnlyTextModifiersPressed() const;
+
     void pressModifier(int modifierKey);
     void pressKey(int key, bool pressed);
 
