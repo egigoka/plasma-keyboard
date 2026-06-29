@@ -20,6 +20,35 @@ InputPanelWindow {
     width: Screen.width
     color: 'transparent'
 
+    property string previousLocale: ""
+    property string currentLocale: VirtualKeyboardSettings.locale
+    property bool languagePopupRequestedByHold: false
+    property bool ignoreNextLanguageSwitch: false
+
+    function isLanguageSwitchKey(key) {
+        return key && key.objectName === "changeLanguageKey";
+    }
+
+    function activeLocalesFallback(localeList) {
+        return localeList.length > 0 ? localeList : VirtualKeyboardSettings.activeLocales;
+    }
+
+    function switchToPreviousLocale(localeList, currentIndex) {
+        const locales = activeLocalesFallback(localeList);
+        if (locales.length < 2) {
+            return;
+        }
+
+        const locale = previousLocale.length > 0
+                && previousLocale !== VirtualKeyboardSettings.locale
+                && locales.indexOf(previousLocale) !== -1
+            ? previousLocale
+            : locales[(currentIndex + 1) % locales.length];
+        if (locale !== VirtualKeyboardSettings.locale) {
+            VirtualKeyboardSettings.locale = locale;
+        }
+    }
+
     onVisibleChanged: {
         if (!visible) {
             // Reset keyboard navigation when hidden
@@ -115,7 +144,57 @@ InputPanelWindow {
             focusPolicy: Qt.NoFocus
             externalLanguageSwitchEnabled: true
             onExternalLanguageSwitch: (localeList, currentIndex) => {
-                languageDialog.show(inputPanel.keyboard.activeKey, localeList, currentIndex)
+                if (root.languagePopupRequestedByHold) {
+                    root.languagePopupRequestedByHold = false;
+                    languageDialog.show(inputPanel.keyboard.activeKey, localeList, currentIndex);
+                    return;
+                }
+
+                if (root.ignoreNextLanguageSwitch) {
+                    root.ignoreNextLanguageSwitch = false;
+                    return;
+                }
+
+                root.switchToPreviousLocale(localeList, currentIndex);
+            }
+
+            Timer {
+                id: languagePopupHoldTimer
+                interval: inputPanel.keyboard.pressAndHoldDelay
+                onTriggered: {
+                    if (!root.isLanguageSwitchKey(inputPanel.keyboard.activeKey)) {
+                        return;
+                    }
+
+                    root.languagePopupRequestedByHold = true;
+                    root.ignoreNextLanguageSwitch = true;
+                    inputPanel.keyboard.showLanguagePopup(inputPanel.keyboard.activeKey, false);
+                }
+            }
+
+            Connections {
+                target: inputPanel.keyboard
+                function onActiveKeyChanged() {
+                    if (root.isLanguageSwitchKey(inputPanel.keyboard.activeKey)) {
+                        languagePopupHoldTimer.restart();
+                    } else {
+                        languagePopupHoldTimer.stop();
+                    }
+                }
+            }
+
+            Connections {
+                target: VirtualKeyboardSettings
+                function onLocaleChanged() {
+                    if (VirtualKeyboardSettings.locale.length === 0 || VirtualKeyboardSettings.locale === root.currentLocale) {
+                        return;
+                    }
+
+                    if (root.currentLocale.length > 0) {
+                        root.previousLocale = root.currentLocale;
+                    }
+                    root.currentLocale = VirtualKeyboardSettings.locale;
+                }
             }
 
             function updateLocales() {
