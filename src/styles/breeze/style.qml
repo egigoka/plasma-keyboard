@@ -224,7 +224,7 @@ KeyboardStyle {
                 id: languageKeyIcon
                 anchors.centerIn: parent
                 implicitHeight: 96 * theme.keyIconScale
-                source: "globe"
+                source: "globe-symbolic"
             }
         }
 
