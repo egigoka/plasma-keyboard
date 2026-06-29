@@ -43,6 +43,7 @@ static const QMap<int, int> QT_KEY_TO_LINUX = {
     {Qt::Key_End, KEY_END},
     {Qt::Key_PageUp, KEY_PAGEUP},
     {Qt::Key_PageDown, KEY_PAGEDOWN},
+    {Qt::Key_Print, KEY_SYSRQ},
 
     {Qt::Key_F1, KEY_F1},
     {Qt::Key_F2, KEY_F2},
@@ -129,6 +130,7 @@ static const std::set<int> FAKE_INPUT_KEYS = {
     Qt::Key_End,
     Qt::Key_PageUp,
     Qt::Key_PageDown,
+    Qt::Key_Print,
     Qt::Key_F1,
     Qt::Key_F2,
     Qt::Key_F3,
