@@ -195,6 +195,17 @@ bool KWinFakeInput::isModifierPressed() const
     return !m_toggledModifierKeys.empty() || m_capsLockOn;
 }
 
+bool KWinFakeInput::hasOnlyTextModifiersPressed() const
+{
+    const int shiftKey = QT_KEY_TO_LINUX[Qt::Key_Shift];
+    for (int modifier : m_toggledModifierKeys) {
+        if (modifier != shiftKey) {
+            return false;
+        }
+    }
+    return m_capsLockOn || m_toggledModifierKeys.contains(shiftKey);
+}
+
 void KWinFakeInput::pressModifier(int modifierKey)
 {
     if (!QT_KEY_TO_LINUX.contains(modifierKey)) {

@@ -46,6 +46,23 @@ Q_GLOBAL_STATIC_WITH_ARGS(const QList<Qt::Key>, KEYBOARD_NAVIGATION_CAPTURE_KEYS
 // Keys to capture when keyboard navigation is active
 Q_GLOBAL_STATIC_WITH_ARGS(const QList<Qt::Key>, KEYBOARD_NAVIGATION_ACTIVE_CAPTURE_KEYS, (initCapture() + QList<Qt::Key>{Qt::Key_Return}));
 
+static bool shouldCommitTextWithOnlyTextModifiers(QKeyEvent *event, const KWinFakeInput &fakeInput)
+{
+    if (!fakeInput.hasOnlyTextModifiersPressed() || event->text().isEmpty() || fakeInput.shouldUseFakeInput(event->key())) {
+        return false;
+    }
+
+    switch (event->key()) {
+    case Qt::Key_Enter:
+    case Qt::Key_Return:
+    case Qt::Key_Tab:
+    case Qt::Key_Backtab:
+        return false;
+    default:
+        return true;
+    }
+}
+
 InputListenerItem::InputListenerItem()
     : m_input(&(*s_im))
     , m_overlayController(new OverlayController(&m_input, this))
@@ -350,11 +367,12 @@ void InputListenerItem::keyPressEvent(QKeyEvent *event)
         return;
     }
 
+    const bool commitTextWithOnlyTextModifiers = shouldCommitTextWithOnlyTextModifiers(event, m_fakeInput);
     if (!m_fakeInput.isModifier(event->key())
-        && (m_fakeInput.shouldUseFakeInput(event->key()) || m_fakeInput.isModifierPressed())) {
+        && (m_fakeInput.shouldUseFakeInput(event->key()) || (m_fakeInput.isModifierPressed() && !commitTextWithOnlyTextModifiers))) {
         // If this is one of:
         // - Key to send through fake input, but not a modifier (ex. Escape, Tab)
-        // - Regular key, but a modifier is pressed
+        // - Regular key, but a shortcut modifier is pressed
         // Send the press event through fake_input
         m_fakeInput.pressKey(event->key(), true);
         return;
@@ -378,7 +396,8 @@ void InputListenerItem::keyReleaseEvent(QKeyEvent *event)
 
     // TODO: shift on the vkbd has caps lock (double click), this code doesn't account for it yet
 
-    if (m_fakeInput.shouldUseFakeInput(event->key()) || m_fakeInput.isModifierPressed()) {
+    const bool commitTextWithOnlyTextModifiers = shouldCommitTextWithOnlyTextModifiers(event, m_fakeInput);
+    if (m_fakeInput.shouldUseFakeInput(event->key()) || (m_fakeInput.isModifierPressed() && !commitTextWithOnlyTextModifiers)) {
         // Send through fake_input
 
         if (m_fakeInput.isModifier(event->key())) {
@@ -402,6 +421,9 @@ void InputListenerItem::keyReleaseEvent(QKeyEvent *event)
         } else {
             // If we have text coming as a key event, use it to commit the string
             m_input.commit(event->text());
+            if (commitTextWithOnlyTextModifiers) {
+                m_fakeInput.releaseModifiers();
+            }
         }
     }
 }
