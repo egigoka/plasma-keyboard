@@ -118,6 +118,8 @@ static const std::set<int> FAKE_INPUT_KEYS = {
     Qt::Key_Control,
     Qt::Key_CapsLock,
     Qt::Key_Shift,
+    Qt::Key_Hyper_L,
+    Qt::Key_Hyper_R,
     Qt::Key_Tab,
     Qt::Key_Escape,
     Qt::Key_Up,
@@ -152,6 +154,8 @@ static const std::set<int> MODIFIER_KEYS = {
     Qt::Key_Control,
     Qt::Key_CapsLock,
     Qt::Key_Shift,
+    Qt::Key_Hyper_L,
+    Qt::Key_Hyper_R,
 };
 
 class FakeInput : public QWaylandClientExtensionTemplate<FakeInput>, public QtWayland::org_kde_kwin_fake_input
@@ -210,6 +214,26 @@ bool KWinFakeInput::hasOnlyTextModifiersPressed() const
 
 void KWinFakeInput::pressModifier(int modifierKey)
 {
+    if (modifierKey == Qt::Key_Hyper_L || modifierKey == Qt::Key_Hyper_R) {
+        const int hyperModifierKeys[] = {KEY_LEFTCTRL, KEY_LEFTALT, KEY_LEFTSHIFT, KEY_LEFTMETA};
+        bool allPressed = true;
+        for (int linuxKey : hyperModifierKeys) {
+            allPressed = allPressed && m_toggledModifierKeys.contains(linuxKey);
+        }
+
+        for (int linuxKey : hyperModifierKeys) {
+            if (allPressed) {
+                m_toggledModifierKeys.remove(linuxKey);
+                sendFakeKeyboardKey(linuxKey, false);
+            } else if (!m_toggledModifierKeys.contains(linuxKey)) {
+                m_toggledModifierKeys.insert(linuxKey);
+                sendFakeKeyboardKey(linuxKey, true);
+            }
+        }
+        updateModifierStateToUI();
+        return;
+    }
+
     if (!QT_KEY_TO_LINUX.contains(modifierKey)) {
         qWarning() << "Cannot find Qt key -> Linux event code mapping for" << modifierKey;
         return;
