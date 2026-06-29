@@ -88,9 +88,11 @@ int main(int argc, char **argv)
         });
     // clang-format on
 
-    // InputListenerItem / InputPanelWindow are QML_ELEMENT (auto-registered by the
-    // QML module); only the fork's new PlasmaKeyboardState needs manual registration.
-    qmlRegisterSingletonInstance<PlasmaKeyboardState>("org.kde.plasma.keyboard", 1, 0,
+    // Shared instance across all QML engines (incl. Qt VirtualKeyboard's separate
+    // layout engine) so modifier-state NOTIFY reaches the layout's KeysymKey
+    // bindings. Registered in its OWN URI, not the ecm_add_qml_module URI
+    // "org.kde.plasma.keyboard" (imperative registration there breaks the module).
+    qmlRegisterSingletonInstance<PlasmaKeyboardState>("org.kde.plasma.keyboard.state", 1, 0,
         "PlasmaKeyboardState", PlasmaKeyboardState::self());
 
     QQmlApplicationEngine view;

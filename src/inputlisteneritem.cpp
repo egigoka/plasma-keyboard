@@ -343,6 +343,13 @@ void InputListenerItem::keyPressEvent(QKeyEvent *event)
         return;
     }
 
+    // Modifiers are toggled on release via fake_input. Do NOT leak an (unpaired)
+    // modifier press through input_method_v1 here: for Alt that arms application
+    // menu mnemonics and makes the input panel flicker.
+    if (m_fakeInput.isModifier(event->key())) {
+        return;
+    }
+
     if (!m_fakeInput.isModifier(event->key())
         && (m_fakeInput.shouldUseFakeInput(event->key()) || m_fakeInput.isModifierPressed())) {
         // If this is one of:
