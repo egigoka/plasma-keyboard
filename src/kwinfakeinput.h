@@ -41,4 +41,7 @@ private:
 
     FakeInput *m_ext = nullptr;
     QSet<int> m_toggledModifierKeys;
+    // Caps Lock is a sticky lock (persists until tapped again), unlike the
+    // held-then-released modifiers tracked in m_toggledModifierKeys.
+    bool m_capsLockOn = false;
 };

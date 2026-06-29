@@ -189,7 +189,10 @@ bool KWinFakeInput::isModifier(int key) const
 
 bool KWinFakeInput::isModifierPressed() const
 {
-    return !m_toggledModifierKeys.empty();
+    // Caps Lock counts too: while it's locked, ordinary keys must keep going
+    // through fake_input so the compositor's lock applies (letters come out
+    // uppercase) rather than being committed verbatim via input_method_v1.
+    return !m_toggledModifierKeys.empty() || m_capsLockOn;
 }
 
 void KWinFakeInput::pressModifier(int modifierKey)
@@ -200,6 +203,18 @@ void KWinFakeInput::pressModifier(int modifierKey)
     }
 
     const int linuxKey = QT_KEY_TO_LINUX[modifierKey];
+
+    if (linuxKey == KEY_CAPSLOCK) {
+        // Caps Lock is a lock, not a held modifier: tap it (press+release) to
+        // flip the compositor's lock, and keep our own sticky flag so it stays
+        // on across keystrokes until tapped again (it is NOT auto-released by
+        // releaseModifiers() like Shift/Ctrl/Alt).
+        m_capsLockOn = !m_capsLockOn;
+        sendFakeKeyboardKey(linuxKey, true);
+        sendFakeKeyboardKey(linuxKey, false);
+        updateModifierStateToUI();
+        return;
+    }
 
     // Toggle modifier state
     if (m_toggledModifierKeys.contains(linuxKey)) {
@@ -256,7 +271,7 @@ void KWinFakeInput::sendFakeKeyboardKey(int key, bool pressed)
 void KWinFakeInput::updateModifierStateToUI()
 {
     PlasmaKeyboardState::self()->setModifierMetaPressed(m_toggledModifierKeys.contains(QT_KEY_TO_LINUX[Qt::Key_Meta]));
-    PlasmaKeyboardState::self()->setModifierCapsLockPressed(m_toggledModifierKeys.contains(QT_KEY_TO_LINUX[Qt::Key_CapsLock]));
+    PlasmaKeyboardState::self()->setModifierCapsLockPressed(m_capsLockOn);
     PlasmaKeyboardState::self()->setModifierControlPressed(m_toggledModifierKeys.contains(QT_KEY_TO_LINUX[Qt::Key_Control]));
     PlasmaKeyboardState::self()->setModifierAltPressed(m_toggledModifierKeys.contains(QT_KEY_TO_LINUX[Qt::Key_Alt]));
     PlasmaKeyboardState::self()->setModifierShiftPressed(m_toggledModifierKeys.contains(QT_KEY_TO_LINUX[Qt::Key_Shift]));
