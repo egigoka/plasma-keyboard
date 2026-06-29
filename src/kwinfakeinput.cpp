@@ -108,7 +108,9 @@ static const QMap<int, int> QT_KEY_TO_LINUX = {
     {Qt::Key_QuoteLeft, KEY_GRAVE},
 };
 
-// Keys to send through the "fake input" protocol
+// Keys to send through the "fake input" protocol (real key events). Non-text
+// editing/navigation/function keys must go here — the input_method_v1 keysym
+// path doesn't reliably deliver them for synthetic key events (e.g. Del).
 static const std::set<int> FAKE_INPUT_KEYS = {
     Qt::Key_Meta,
     Qt::Key_Alt,
@@ -121,6 +123,24 @@ static const std::set<int> FAKE_INPUT_KEYS = {
     Qt::Key_Down,
     Qt::Key_Left,
     Qt::Key_Right,
+    Qt::Key_Delete,
+    Qt::Key_Insert,
+    Qt::Key_Home,
+    Qt::Key_End,
+    Qt::Key_PageUp,
+    Qt::Key_PageDown,
+    Qt::Key_F1,
+    Qt::Key_F2,
+    Qt::Key_F3,
+    Qt::Key_F4,
+    Qt::Key_F5,
+    Qt::Key_F6,
+    Qt::Key_F7,
+    Qt::Key_F8,
+    Qt::Key_F9,
+    Qt::Key_F10,
+    Qt::Key_F11,
+    Qt::Key_F12,
 };
 
 // Keys that are modifiers, and so have a "toggle" state
@@ -214,11 +234,17 @@ void KWinFakeInput::pressKey(int key, bool pressed)
 
 void KWinFakeInput::releaseModifiers()
 {
-    // Release pressed modifiers
-    for (int modifier : m_toggledModifierKeys) {
+    if (m_toggledModifierKeys.isEmpty()) {
+        return;
+    }
+    // Clear first (iterating a copy) so a re-entrant call — e.g. the input-panel
+    // visibility handler firing while we send key events, which Alt can trigger —
+    // sees an empty set and doesn't mutate the container mid-iteration (crash/loop).
+    const QSet<int> toRelease = m_toggledModifierKeys;
+    m_toggledModifierKeys.clear();
+    for (int modifier : toRelease) {
         sendFakeKeyboardKey(modifier, false); // Unpress the modifier
     }
-    m_toggledModifierKeys.clear();
     updateModifierStateToUI();
 }
 
