@@ -68,7 +68,7 @@ BaseKey {
                 anchors.bottom: parent.bottom
                 anchors.bottomMargin: 4 * theme.scaleHint
                 font.family: theme.fontFamily
-                font.pixelSize: 11 * theme.scaleHint
+                font.pixelSize: 14 * theme.scaleHint
             }
 
             Kirigami.Icon {
