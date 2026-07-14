@@ -16,6 +16,10 @@
 #include "overlay/prefixquerytrigger.h"
 #include "overlay/textexpansiontrigger.h"
 
+#include <KGlobalAccel>
+#include <KLocalizedString>
+
+#include <QAction>
 #include <QLoggingCategory>
 #include <QTextFormat>
 
@@ -68,6 +72,19 @@ InputListenerItem::InputListenerItem()
     , m_overlayController(new OverlayController(&m_input, this))
 {
     m_fakeInput.init();
+
+    m_escapeShortcutAction = new QAction(this);
+    m_escapeShortcutAction->setObjectName(QStringLiteral("hide-on-escape"));
+    m_escapeShortcutAction->setText(i18n("Hide Keyboard"));
+    connect(m_escapeShortcutAction, &QAction::triggered, this, &InputListenerItem::dismissKeyboard);
+    connect(this, &QQuickItem::windowChanged, this, [this](QQuickWindow *window) {
+        if (window) {
+            connect(window, &QWindow::visibleChanged, this, [this] {
+                updateEscapeShortcut();
+            });
+        }
+        updateEscapeShortcut();
+    });
 
     // Grab and listen to physical keyboard input
     m_input.setGrabbing(true);
@@ -134,12 +151,14 @@ InputListenerItem::InputListenerItem()
     connect(&m_input, &InputPlugin::keyPressed, this, [this](QKeyEvent *keyEvent) {
         // qCDebug(PlasmaKeyboard) << "keyPressed. keycode:" << keyEvent->key() << "text:" << keyEvent->text() << "modifiers:" << keyEvent->modifiers();
 
+        if (keyEvent->key() == Qt::Key_Escape && consumeOwnInjectedEscape()) {
+            return;
+        }
+
         if (keyEvent->key() == Qt::Key_Escape && (window()->isVisible() || m_escapeIntercepted)) {
             m_escapeIntercepted = true;
-            m_escapeDismissed = true;
             keyEvent->accept();
-            QGuiApplication::inputMethod()->setVisible(false);
-            window()->setVisible(false);
+            dismissKeyboard();
             return;
         }
 
@@ -169,6 +188,10 @@ InputListenerItem::InputListenerItem()
     });
     connect(&m_input, &InputPlugin::keyReleased, this, [this](QKeyEvent *keyEvent) {
         // qCDebug(PlasmaKeyboard) << "keyReleased. keycode:" << keyEvent->key() << "text:" << keyEvent->text();
+
+        if (keyEvent->key() == Qt::Key_Escape && consumeOwnInjectedEscape()) {
+            return;
+        }
 
         if (keyEvent->key() == Qt::Key_Escape && m_escapeIntercepted) {
             m_escapeIntercepted = false;
@@ -383,6 +406,11 @@ void InputListenerItem::keyPressEvent(QKeyEvent *event)
         return;
     }
 
+    if (event->key() == Qt::Key_Escape) {
+        m_ownInjectedEscapeEventsPending = 2;
+        updateEscapeShortcut();
+    }
+
     const bool commitTextWithOnlyTextModifiers = shouldCommitTextWithOnlyTextModifiers(event, m_fakeInput);
     if (!m_fakeInput.isModifier(event->key())
         && (m_fakeInput.shouldUseFakeInput(event->key()) || (m_fakeInput.isModifierPressed() && !commitTextWithOnlyTextModifiers))) {
@@ -402,6 +430,42 @@ void InputListenerItem::keyPressEvent(QKeyEvent *event)
     if (event->text().isEmpty() || keysymKey == XKB_KEY_Return) { // (return is technically "\n")
         m_input.keysym(QDateTime::currentMSecsSinceEpoch(), keysymKey, InputPlugin::Pressed, 0);
     }
+}
+
+void InputListenerItem::dismissKeyboard()
+{
+    if (!window() || !window()->isVisible()) {
+        return;
+    }
+
+    m_escapeDismissed = true;
+    QGuiApplication::inputMethod()->setVisible(false);
+    window()->setVisible(false);
+}
+
+void InputListenerItem::updateEscapeShortcut()
+{
+    const bool shouldRegister = window() && window()->isVisible() && m_ownInjectedEscapeEventsPending == 0;
+    if (shouldRegister == m_escapeShortcutRegistered) {
+        return;
+    }
+
+    const QList<QKeySequence> shortcuts = shouldRegister ? QList{QKeySequence(Qt::Key_Escape)} : QList<QKeySequence>{};
+    const bool updated = KGlobalAccel::self()->setShortcut(m_escapeShortcutAction, shortcuts, KGlobalAccel::NoAutoloading);
+    m_escapeShortcutRegistered = shouldRegister && updated;
+}
+
+bool InputListenerItem::consumeOwnInjectedEscape()
+{
+    if (m_ownInjectedEscapeEventsPending == 0) {
+        return false;
+    }
+
+    --m_ownInjectedEscapeEventsPending;
+    if (m_ownInjectedEscapeEventsPending == 0) {
+        updateEscapeShortcut();
+    }
+    return true;
 }
 
 void InputListenerItem::keyReleaseEvent(QKeyEvent *event)

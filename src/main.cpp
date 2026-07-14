@@ -46,7 +46,7 @@ int main(int argc, char **argv)
 
     KAboutData aboutData(QStringLiteral("plasma-keyboard"),
                          i18n("Plasma Keyboard"),
-                         QStringLiteral(PLASMA_KEYBOARD_VERSION_STRING),
+                         QStringLiteral(PLASMA_KEYBOARD_BUILD_VERSION),
                          i18n("An on-screen keyboard for Plasma"),
                          KAboutLicense::GPL,
                          i18n("Copyright 2024, Aleix Pol Gonzalez"));

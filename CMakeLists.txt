@@ -13,6 +13,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(PROJECT_DEP_VERSION "6.6.90")
 set(QT_MIN_VERSION "6.10.0")
 set(KF6_MIN_VERSION "6.26.0")
+set(PLASMA_KEYBOARD_BUILD_VERSION "${PROJECT_VERSION}" CACHE STRING "Version shown by the running keyboard")
 
 find_package(ECM ${KF6_MIN_VERSION} REQUIRED)
 set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
@@ -51,6 +52,7 @@ find_package(KF6 ${KF6_MIN_VERSION} REQUIRED COMPONENTS
     KCMUtils
     Config
     Crash
+    GlobalAccel
 )
 
 find_package(PlasmaQuick ${PROJECT_DEP_VERSION} REQUIRED)

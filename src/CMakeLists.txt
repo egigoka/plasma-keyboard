@@ -104,6 +104,8 @@ target_include_directories(plasma-keyboard PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/overlay
 )
 
+target_compile_definitions(plasma-keyboard PRIVATE PLASMA_KEYBOARD_BUILD_VERSION="${PLASMA_KEYBOARD_BUILD_VERSION}")
+
 target_link_libraries(plasma-keyboard
     PRIVATE
     KF6::CoreAddons
@@ -112,6 +114,7 @@ target_link_libraries(plasma-keyboard
     KF6::ConfigCore
     KF6::ConfigGui
     KF6::Crash
+    KF6::GlobalAccel
     PkgConfig::XKBCommon
     Plasma::PlasmaQuick
     Qt::DBus

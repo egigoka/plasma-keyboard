@@ -19,6 +19,7 @@
 #include "kwinfakeinput.h"
 
 class OverlayController;
+class QAction;
 
 class InputListenerItem : public QQuickItem
 {
@@ -56,10 +57,17 @@ Q_SIGNALS:
     void keyNavigationReleased(int key);
 
 private:
+    void dismissKeyboard();
+    void updateEscapeShortcut();
+    bool consumeOwnInjectedEscape();
+
     InputPlugin m_input;
     OverlayController *m_overlayController = nullptr;
+    QAction *m_escapeShortcutAction = nullptr;
     KWinFakeInput m_fakeInput;
     bool m_keyboardNavigationActive = false;
     bool m_escapeIntercepted = false;
     bool m_escapeDismissed = false;
+    bool m_escapeShortcutRegistered = false;
+    int m_ownInjectedEscapeEventsPending = 0;
 };

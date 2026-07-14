@@ -59,6 +59,18 @@ BaseKey {
                 }
             }
 
+            QQC2.Label {
+                text: Qt.application.version.split("-").pop()
+                color: theme.keyTextColor
+                opacity: 0.6
+                visible: keyPanel.key === Qt.Key_Hyper_L || keyPanel.key === Qt.Key_Hyper_R
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 4 * theme.scaleHint
+                font.family: theme.fontFamily
+                font.pixelSize: 11 * theme.scaleHint
+            }
+
             Kirigami.Icon {
                 id: icon
                 source: keyPanel.iconSource
