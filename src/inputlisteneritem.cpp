@@ -91,7 +91,8 @@ InputListenerItem::InputListenerItem()
                                                               QStringLiteral("forceActivate"));
         QDBusConnection::sessionBus().asyncCall(message);
     });
-    const QList<QKeySequence> showShortcuts{QKeySequence(QKeyCombination(Qt::MetaModifier, Qt::Key_K))};
+    const QList<QKeySequence> showShortcuts{
+        QKeySequence(QKeyCombination(Qt::ShiftModifier | Qt::ControlModifier | Qt::MetaModifier | Qt::AltModifier, Qt::Key_K))};
     KGlobalAccel::self()->setDefaultShortcut(showShortcutAction, showShortcuts);
     KGlobalAccel::self()->setShortcut(showShortcutAction, showShortcuts);
 
