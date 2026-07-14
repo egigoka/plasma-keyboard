@@ -86,6 +86,7 @@ InputListenerItem::InputListenerItem()
         }
 
         if (hasContext) {
+            m_escapeDismissed = false;
             QGuiApplication::inputMethod()->update(Qt::ImQueryAll);
             QGuiApplication::inputMethod()->show();
         } else {
@@ -102,7 +103,7 @@ InputListenerItem::InputListenerItem()
             m_overlayController->handleSurroundingTextChanged();
         }
 
-        if (m_input.hasContext()) {
+        if (m_input.hasContext() && !m_escapeDismissed) {
             // Re-activate when text input activates, and there is context
             if (!window()->isVisible()) {
                 QGuiApplication::inputMethod()->setVisible(true);
@@ -133,10 +134,12 @@ InputListenerItem::InputListenerItem()
     connect(&m_input, &InputPlugin::keyPressed, this, [this](QKeyEvent *keyEvent) {
         // qCDebug(PlasmaKeyboard) << "keyPressed. keycode:" << keyEvent->key() << "text:" << keyEvent->text() << "modifiers:" << keyEvent->modifiers();
 
-        if (keyEvent->key() == Qt::Key_Escape && (QGuiApplication::inputMethod()->isVisible() || m_escapeIntercepted)) {
+        if (keyEvent->key() == Qt::Key_Escape && (window()->isVisible() || m_escapeIntercepted)) {
             m_escapeIntercepted = true;
+            m_escapeDismissed = true;
             keyEvent->accept();
             QGuiApplication::inputMethod()->setVisible(false);
+            window()->setVisible(false);
             return;
         }
 

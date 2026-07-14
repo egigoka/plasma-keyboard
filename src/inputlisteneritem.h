@@ -61,4 +61,5 @@ private:
     KWinFakeInput m_fakeInput;
     bool m_keyboardNavigationActive = false;
     bool m_escapeIntercepted = false;
+    bool m_escapeDismissed = false;
 };
