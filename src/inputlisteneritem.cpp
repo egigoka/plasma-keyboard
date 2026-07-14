@@ -133,7 +133,7 @@ InputListenerItem::InputListenerItem()
     connect(&m_input, &InputPlugin::keyPressed, this, [this](QKeyEvent *keyEvent) {
         // qCDebug(PlasmaKeyboard) << "keyPressed. keycode:" << keyEvent->key() << "text:" << keyEvent->text() << "modifiers:" << keyEvent->modifiers();
 
-        if (keyEvent->key() == Qt::Key_Escape && (window()->isExposed() || m_escapeIntercepted)) {
+        if (keyEvent->key() == Qt::Key_Escape && (QGuiApplication::inputMethod()->isVisible() || m_escapeIntercepted)) {
             m_escapeIntercepted = true;
             keyEvent->accept();
             QGuiApplication::inputMethod()->setVisible(false);
