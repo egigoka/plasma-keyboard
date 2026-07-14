@@ -775,6 +775,33 @@ private Q_SLOTS:
         }
     }
 
+    void testEscapeHidesKeyboardUntilNextActivation()
+    {
+        auto *context = m_inputMethod->context();
+        QVERIFY(context);
+        QSignalSpy keySpy(context, &InputMethodContext::keyReceived);
+
+        auto *surface = m_inputPanel->surface();
+        QVERIFY(surface);
+        QTRY_VERIFY_WITH_TIMEOUT(surface->hasContent(), 5000);
+
+        sendKey(KEY_ESC, 10);
+
+        QTRY_VERIFY_WITH_TIMEOUT(!surface->hasContent(), 5000);
+        QVERIFY(keySpy.isEmpty());
+
+        m_inputMethod->sendDeactivate();
+        m_inputMethod->sendActivate();
+
+        context = m_inputMethod->context();
+        QVERIFY(context);
+        if (!context->keyboard()) {
+            QSignalSpy grabSpy(context, &InputMethodContext::keyboardGrabbed);
+            QVERIFY(grabSpy.wait());
+        }
+        QTRY_VERIFY_WITH_TIMEOUT(m_inputPanel->surface() && m_inputPanel->surface()->hasContent(), 5000);
+    }
+
     void testLongPressShowsOverlayPanel()
     {
         QSignalSpy overlaySpy(m_inputPanel.get(), &InputPanelV1::overlayPanelRequested);

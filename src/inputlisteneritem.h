@@ -60,4 +60,5 @@ private:
     OverlayController *m_overlayController = nullptr;
     KWinFakeInput m_fakeInput;
     bool m_keyboardNavigationActive = false;
+    bool m_escapeIntercepted = false;
 };

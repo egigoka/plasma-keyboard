@@ -133,6 +133,13 @@ InputListenerItem::InputListenerItem()
     connect(&m_input, &InputPlugin::keyPressed, this, [this](QKeyEvent *keyEvent) {
         // qCDebug(PlasmaKeyboard) << "keyPressed. keycode:" << keyEvent->key() << "text:" << keyEvent->text() << "modifiers:" << keyEvent->modifiers();
 
+        if (keyEvent->key() == Qt::Key_Escape && (window()->isExposed() || m_escapeIntercepted)) {
+            m_escapeIntercepted = true;
+            keyEvent->accept();
+            QGuiApplication::inputMethod()->setVisible(false);
+            return;
+        }
+
         // Delegate to overlay controller for diacritics/emoji/text expansion
         if (m_overlayController && m_overlayController->processKeyPress(keyEvent)) {
             keyEvent->accept();
@@ -159,6 +166,12 @@ InputListenerItem::InputListenerItem()
     });
     connect(&m_input, &InputPlugin::keyReleased, this, [this](QKeyEvent *keyEvent) {
         // qCDebug(PlasmaKeyboard) << "keyReleased. keycode:" << keyEvent->key() << "text:" << keyEvent->text();
+
+        if (keyEvent->key() == Qt::Key_Escape && m_escapeIntercepted) {
+            m_escapeIntercepted = false;
+            keyEvent->accept();
+            return;
+        }
 
         // Let the overlay controller handle release events (e.g. diacritics, emoji)
         if (m_overlayController && m_overlayController->processKeyRelease(keyEvent)) {
