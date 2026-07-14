@@ -20,6 +20,8 @@
 #include <KLocalizedString>
 
 #include <QAction>
+#include <QDBusConnection>
+#include <QDBusMessage>
 #include <QLoggingCategory>
 #include <QTextFormat>
 
@@ -72,6 +74,25 @@ InputListenerItem::InputListenerItem()
     , m_overlayController(new OverlayController(&m_input, this))
 {
     m_fakeInput.init();
+
+    auto showShortcutAction = new QAction(this);
+    showShortcutAction->setObjectName(QStringLiteral("show-keyboard"));
+    showShortcutAction->setText(i18n("Show Keyboard"));
+    connect(showShortcutAction, &QAction::triggered, this, [this] {
+        m_escapeDismissed = false;
+        if (m_input.hasContext()) {
+            QGuiApplication::inputMethod()->show();
+        }
+
+        QDBusMessage message = QDBusMessage::createMethodCall(QStringLiteral("org.kde.KWin"),
+                                                              QStringLiteral("/VirtualKeyboard"),
+                                                              QStringLiteral("org.kde.kwin.VirtualKeyboard"),
+                                                              QStringLiteral("forceActivate"));
+        QDBusConnection::sessionBus().asyncCall(message);
+    });
+    const QList<QKeySequence> showShortcuts{QKeySequence(QKeyCombination(Qt::MetaModifier, Qt::Key_K))};
+    KGlobalAccel::self()->setDefaultShortcut(showShortcutAction, showShortcuts);
+    KGlobalAccel::self()->setShortcut(showShortcutAction, showShortcuts);
 
     m_escapeShortcutAction = new QAction(this);
     m_escapeShortcutAction->setObjectName(QStringLiteral("hide-on-escape"));
